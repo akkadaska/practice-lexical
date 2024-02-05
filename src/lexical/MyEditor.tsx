@@ -8,7 +8,7 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
-import { MyBlockNode } from './node';
+import { MyBlockDecoratorNode, MyBlockNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
 import React from 'react';
 import ClearEditorPlugin, {
@@ -20,6 +20,10 @@ import SetSingleBlockNodePlugin, {
 } from './plugins/SetSingleBlockNodePlugin';
 import EnsureExclusiveMyBlockNodePlugin from './plugins/EnsureExclusiveMyBlockNode';
 import OnChangePlugin from './plugins/OnChangePlugin';
+import SetSingleBlockDecoratorNodePlugin, {
+  SET_SINGLE_DECORATOR_BLOCK_COMMAND,
+} from './plugins/SetSingleBlockDecoratorNodePlugin';
+import EnsureExclusiveMyDecoratorBlockNodePlugin from './plugins/EnsureExclusiveMyDecoratorBlockNode';
 
 const onError = (error: unknown) => {
   console.error(error);
@@ -44,7 +48,7 @@ const MyEditor: React.FC<{ editorRef: React.RefObject<LexicalEditor> }> = ({
     editable: true,
     namespace: 'MyEditor',
     onError,
-    nodes: [MyBlockNode],
+    nodes: [MyBlockNode, MyBlockDecoratorNode],
   };
 
   // eslint-disable-next-line no-console
@@ -62,7 +66,9 @@ const MyEditor: React.FC<{ editorRef: React.RefObject<LexicalEditor> }> = ({
         <ProhibitLineBreakPlugin />
         <ClearEditorPlugin />
         <SetSingleBlockNodePlugin />
+        <SetSingleBlockDecoratorNodePlugin />
         <EnsureExclusiveMyBlockNodePlugin />
+        <EnsureExclusiveMyDecoratorBlockNodePlugin />
         <OnChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>
@@ -84,6 +90,11 @@ const useLexicalEditorControl = () => {
         SET_SINGLE_BLOCK_COMMAND,
         { text, blockInfo },
       );
+    },
+    SetSingleBlockDecoratorNode: (text: string, blockInfo: string) => {
+      editorRef.current?.dispatchCommand<
+        typeof SET_SINGLE_DECORATOR_BLOCK_COMMAND
+      >(SET_SINGLE_DECORATOR_BLOCK_COMMAND, { text, blockInfo });
     },
   } as const;
   return [editorRef, controller] as const;

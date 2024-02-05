@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useRef } from 'react';
-import { $isMyBlockNode } from '../node';
+import { $isMyBlockDecoratorNode, $isMyBlockNode } from '../node';
 import { $getRoot, $isParagraphNode } from 'lexical';
 
 const OnChangePlugin: React.FC<{
@@ -9,7 +9,10 @@ const OnChangePlugin: React.FC<{
   const [editor] = useLexicalComposerContext();
 
   const lastContentRef = useRef<
-    { type: 'text'; text: string } | { type: 'block'; blockInfo: string } | null
+    | { type: 'text'; text: string }
+    | { type: 'block'; blockInfo: string }
+    | { type: 'decorator-block'; blockInfo: string }
+    | null
   >(null);
 
   useEffect(() => {
@@ -48,6 +51,24 @@ const OnChangePlugin: React.FC<{
             }
             return;
           }
+
+          if ($isMyBlockDecoratorNode(firstChildOfFirstParagraph)) {
+            if (
+              !(
+                lastContentRef.current?.type === 'decorator-block' &&
+                lastContentRef.current.blockInfo ===
+                  firstChildOfFirstParagraph.getBlockInfo()
+              )
+            ) {
+              lastContentRef.current = {
+                type: 'decorator-block',
+                blockInfo: firstChildOfFirstParagraph.getBlockInfo(),
+              };
+              onChange(lastContentRef.current);
+            }
+            return;
+          }
+
           const text = firstChildOfFirstParagraph?.getTextContent() ?? '';
           if (
             !(

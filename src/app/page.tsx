@@ -31,6 +31,17 @@ const Page: React.FC = () => {
         >
           Set Block Node
         </button>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => {
+            controller.SetSingleBlockDecoratorNode(
+              'Hello, Decorator!',
+              'custom decorator info',
+            );
+          }}
+        >
+          Set Decorator Block Node
+        </button>
       </div>
     </div>
   );
