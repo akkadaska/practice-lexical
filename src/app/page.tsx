@@ -1,11 +1,14 @@
 'use client';
 import MyEditor, { useLexicalEditorControl } from '@/lexical/MyEditor';
+import { useState } from 'react';
 
 const Page: React.FC = () => {
   const [editorRef, controller] = useLexicalEditorControl();
+
+  const [state, setState] = useState<unknown>(null);
   return (
     <div>
-      <MyEditor editorRef={editorRef} />
+      <MyEditor editorRef={editorRef} onChange={setState} />
       <div className="mt-4">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
@@ -42,6 +45,9 @@ const Page: React.FC = () => {
         >
           Set Decorator Block Node
         </button>
+      </div>
+      <div className="my-2">
+        <code>{JSON.stringify(state)}</code>
       </div>
     </div>
   );

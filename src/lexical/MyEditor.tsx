@@ -41,18 +41,16 @@ const MyPlaceHolder: React.FC<{
   </div>
 );
 
-const MyEditor: React.FC<{ editorRef: React.RefObject<LexicalEditor> }> = ({
-  editorRef,
-}) => {
+const MyEditor: React.FC<{
+  editorRef: React.RefObject<LexicalEditor>;
+  onChange: (arg: unknown) => unknown;
+}> = ({ editorRef, onChange }) => {
   const initialConfig: InitialConfigType = {
     editable: true,
     namespace: 'MyEditor',
     onError,
     nodes: [MyBlockNode, MyBlockDecoratorNode],
   };
-
-  // eslint-disable-next-line no-console
-  const onChange = (arg: unknown) => console.log('onChange', arg);
 
   return (
     <div className="relative">
