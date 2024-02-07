@@ -8,6 +8,7 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
+import { ZeroWidthPlugin, ZeroWidthNode } from 'lexical-beautiful-mentions';
 import { MyBlockDecoratorNode, MyBlockNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
 import React from 'react';
@@ -24,7 +25,6 @@ import SetSingleBlockDecoratorNodePlugin, {
   SET_SINGLE_DECORATOR_BLOCK_COMMAND,
 } from './plugins/SetSingleBlockDecoratorNodePlugin';
 import EnsureExclusiveMyDecoratorBlockNodePlugin from './plugins/EnsureExclusiveMyDecoratorBlockNode';
-import AvoidSafariBugForDecoratorNodesPlugin from './plugins/AvoidSafariBugForDecoratorNodes';
 
 const onError = (error: unknown) => {
   console.error(error);
@@ -50,7 +50,7 @@ const MyEditor: React.FC<{
     editable: true,
     namespace: 'MyEditor',
     onError,
-    nodes: [MyBlockNode, MyBlockDecoratorNode],
+    nodes: [MyBlockNode, MyBlockDecoratorNode, ZeroWidthNode],
   };
 
   return (
@@ -66,7 +66,7 @@ const MyEditor: React.FC<{
         <ClearEditorPlugin />
         <SetSingleBlockNodePlugin />
         <SetSingleBlockDecoratorNodePlugin />
-        <AvoidSafariBugForDecoratorNodesPlugin />
+        <ZeroWidthPlugin />
         <EnsureExclusiveMyBlockNodePlugin />
         <EnsureExclusiveMyDecoratorBlockNodePlugin />
         <OnChangePlugin onChange={onChange} />

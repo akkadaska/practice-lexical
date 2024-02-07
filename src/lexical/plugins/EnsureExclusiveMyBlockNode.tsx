@@ -1,13 +1,14 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $createTextNode, $nodesOfType, TextNode } from 'lexical';
+import { $isZeroWidthNode } from 'lexical-beautiful-mentions';
 import { useEffect } from 'react';
-import { MyBlockNode } from '../node';
+import { MyBlockDecoratorNode } from '../node';
 
 /**
- * `MyBlockNode` が他のノードと共存しないようにするプラグイン
- * ユーザーの入力により`TextNode`が新規に作成されたとき、もし`MyBlockNode`が存在していたら、それを`TextNode`に置き換える
+ * `MyBlockDecoratorNode` が他のノードと共存しないようにするプラグイン
+ * ユーザーの入力により`TextNode`が新規に作成されたとき、もし`MyBlockDecoratorNode`が存在していたら、それを`TextNode`に置き換える
  */
-const EnsureExclusiveMyBlockNodePlugin: React.FC = () => {
+const EnsureExclusiveMyDecoratorBlockNodePlugin: React.FC = () => {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     const removeUpdateListener = editor.registerMutationListener(
@@ -21,8 +22,13 @@ const EnsureExclusiveMyBlockNodePlugin: React.FC = () => {
         }
 
         editor.update(() => {
-          const myBlockNodeList = $nodesOfType<MyBlockNode>(MyBlockNode);
+          const myBlockNodeList =
+            $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
           myBlockNodeList.forEach((myBlockNode) => {
+            const nextSibling = myBlockNode.getNextSibling();
+            if ($isZeroWidthNode(nextSibling)) {
+              nextSibling.remove();
+            }
             const replacedTextNode = $createTextNode(
               myBlockNode.getTextContent(),
             );
@@ -40,4 +46,4 @@ const EnsureExclusiveMyBlockNodePlugin: React.FC = () => {
   return null;
 };
 
-export default EnsureExclusiveMyBlockNodePlugin;
+export default EnsureExclusiveMyDecoratorBlockNodePlugin;
