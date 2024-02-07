@@ -132,11 +132,11 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
 
   exportJSON(): SerializedMyDecoratorBlockNode {
     return {
-      ...super.exportJSON(),
-      type: MyBlockNode.getType(),
-      text: this.__text,
-      blockInfo: this.__blockInfo,
-      uid: this.__uid,
+      type: MyBlockDecoratorNode.getType(),
+      version: 1,
+      text: 'this.__text',
+      blockInfo: 'this.__blockInfo',
+      uid: 'this.__uid',
     };
   }
 
