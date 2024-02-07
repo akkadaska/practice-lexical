@@ -61,7 +61,7 @@ const AvoidSafariBugForDecoratorNodesPlugin: React.FC = () => {
 
     const removeMyBlockDecoratorNodeMutationListener =
       editor.registerMutationListener(MyBlockDecoratorNode, (mutatedNodes) => {
-        mutatedNodes.forEach((nodeMutation, nodeKey) => {
+        mutatedNodes.forEach((nodeMutation) => {
           if (nodeMutation === 'destroyed') {
             editor.update(() => {
               const textNodes = $nodesOfType<TextNode>(TextNode);
