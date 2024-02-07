@@ -1,13 +1,19 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { CLEAR_EDITOR_COMMAND } from './plugins/ClearEditorPlugin';
+import { $nodesOfType } from 'lexical';
+import { MyBlockDecoratorNode } from './node';
 
 const ButtonStyleBlock: React.FC<{
   children: React.ReactNode;
-}> = ({ children }) => {
+  uid: string;
+}> = ({ children, uid }) => {
   const [editor] = useLexicalComposerContext();
 
   const onClick = () => {
-    editor.dispatchCommand(CLEAR_EDITOR_COMMAND, { focusAfterClear: true });
+    editor.update(() => {
+      const myBlockDecoratorNodes = $nodesOfType(MyBlockDecoratorNode);
+
+      myBlockDecoratorNodes.find((node) => node.getUid() === uid)?.remove();
+    });
   };
 
   return (

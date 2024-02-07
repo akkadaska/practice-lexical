@@ -24,6 +24,7 @@ import SetSingleBlockDecoratorNodePlugin, {
   SET_SINGLE_DECORATOR_BLOCK_COMMAND,
 } from './plugins/SetSingleBlockDecoratorNodePlugin';
 import EnsureExclusiveMyDecoratorBlockNodePlugin from './plugins/EnsureExclusiveMyDecoratorBlockNode';
+import AvoidSafariBugForDecoratorNodesPlugin from './plugins/AvoidSafariBugForDecoratorNodes';
 
 const onError = (error: unknown) => {
   console.error(error);
@@ -65,8 +66,8 @@ const MyEditor: React.FC<{
         <ClearEditorPlugin />
         <SetSingleBlockNodePlugin />
         <SetSingleBlockDecoratorNodePlugin />
+        <AvoidSafariBugForDecoratorNodesPlugin />
         <EnsureExclusiveMyBlockNodePlugin />
-        <EnsureExclusiveMyDecoratorBlockNodePlugin />
         <OnChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>

@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $createParagraphNode,
+  $createTextNode,
   $getRoot,
   $setSelection,
   COMMAND_PRIORITY_LOW,
@@ -29,7 +30,9 @@ const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
 
           const blockNode = $createMyBlockDecoratorNode(text, blockInfo);
 
-          paragraphNode.append(blockNode);
+          const trailingSpaceNode = $createTextNode(' ');
+
+          paragraphNode.append(blockNode, trailingSpaceNode);
           $getRoot().append(paragraphNode);
         });
 

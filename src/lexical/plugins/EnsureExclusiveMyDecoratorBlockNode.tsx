@@ -1,5 +1,11 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $createTextNode, $nodesOfType, TextNode } from 'lexical';
+import {
+  $createTextNode,
+  $getNodeByKey,
+  $isTextNode,
+  $nodesOfType,
+  TextNode,
+} from 'lexical';
 import { useEffect } from 'react';
 import { MyBlockDecoratorNode } from '../node';
 
@@ -13,21 +19,36 @@ const EnsureExclusiveMyDecoratorBlockNodePlugin: React.FC = () => {
     const removeUpdateListener = editor.registerMutationListener(
       TextNode,
       (mutatedNodes) => {
-        const isCreated = Array.from(mutatedNodes.values()).some(
-          (value) => value === 'created',
-        );
-        if (!isCreated) {
-          return;
-        }
+        mutatedNodes.forEach((nodeMutation, nodeKey) => {
+          editor.update(() => {
+            const currentTextNode = $getNodeByKey<TextNode>(nodeKey);
+            if (!currentTextNode) {
+              return;
+            }
+            const isNewTextInputted =
+              nodeMutation === 'updated' ||
+              (nodeMutation === 'created' &&
+                currentTextNode.getTextContent() !== ' ');
+            if (isNewTextInputted) {
+              const myBlockNodeList =
+                $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
+              myBlockNodeList.forEach((myBlockNode) => {
+                const nextSibling = myBlockNode.getNextSibling();
+                const replacedTextNode = $createTextNode(
+                  myBlockNode.getTextContent(),
+                );
+                myBlockNode.replace(replacedTextNode);
 
-        editor.update(() => {
-          const myBlockNodeList =
-            $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
-          myBlockNodeList.forEach((myBlockNode) => {
-            const replacedTextNode = $createTextNode(
-              myBlockNode.getTextContent(),
-            );
-            myBlockNode.replace(replacedTextNode);
+                const nextSiblingText = nextSibling?.getTextContent();
+                if (
+                  $isTextNode(nextSibling) &&
+                  nextSiblingText?.startsWith(' ')
+                ) {
+                  nextSibling?.setTextContent(nextSiblingText.slice(1));
+                  currentTextNode.selectEnd();
+                }
+              });
+            }
           });
         });
       },
