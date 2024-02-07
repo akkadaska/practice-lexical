@@ -68,6 +68,7 @@ const MyEditor: React.FC<{
         <SetSingleBlockDecoratorNodePlugin />
         <AvoidSafariBugForDecoratorNodesPlugin />
         <EnsureExclusiveMyBlockNodePlugin />
+        <EnsureExclusiveMyDecoratorBlockNodePlugin />
         <OnChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>
