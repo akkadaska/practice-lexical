@@ -8,7 +8,11 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
-import { ZeroWidthPlugin, ZeroWidthNode } from 'lexical-beautiful-mentions';
+import {
+  ZERO_WIDTH_CHARACTER,
+  ZeroWidthNode,
+  ZeroWidthWithIMEPlugin,
+} from './plugins/ZeroWidthWithIMEPlugin';
 import { MyBlockDecoratorNode, MyBlockNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
 import React from 'react';
@@ -59,7 +63,9 @@ const MySpaceSplitEditor: React.FC<{
         <EditorRefPlugin editorRef={editorRef} />
         <ProhibitLineBreakPlugin />
         <ClearEditorPlugin />
-        <ZeroWidthPlugin />
+
+        {/* textContent should be set to avoid IME bugs */}
+        <ZeroWidthWithIMEPlugin textContent={ZERO_WIDTH_CHARACTER} />
         <SpaceSplitBlockPlugin />
         <OnSpaceSplitEditorChangePlugin onChange={onChange} />
       </LexicalComposer>

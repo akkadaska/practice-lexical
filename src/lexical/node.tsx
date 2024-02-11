@@ -87,7 +87,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
   __uid: string;
 
   static getType(): string {
-    return 'my-block-decorator';
+    return 'dcrtr';
   }
 
   static clone(node: MyBlockDecoratorNode): MyBlockDecoratorNode {
@@ -134,9 +134,9 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
     return {
       type: MyBlockDecoratorNode.getType(),
       version: 1,
-      text: 'this.__text',
-      blockInfo: 'this.__blockInfo',
-      uid: 'this.__uid',
+      text: this.__text,
+      blockInfo: this.__blockInfo,
+      uid: this.__uid,
     };
   }
 

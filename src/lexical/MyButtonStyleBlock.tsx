@@ -1,6 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $nodesOfType } from 'lexical';
 import { MyBlockDecoratorNode } from './node';
+import { ZeroWidthNode } from './plugins/ZeroWidthWithIMEPlugin';
 
 const ButtonStyleBlock: React.FC<{
   children: React.ReactNode;
@@ -13,6 +14,14 @@ const ButtonStyleBlock: React.FC<{
       const myBlockDecoratorNodes = $nodesOfType(MyBlockDecoratorNode);
 
       myBlockDecoratorNodes.find((node) => node.getUid() === uid)?.remove();
+
+      const myBlockDecoratorNodeList = $nodesOfType(MyBlockDecoratorNode);
+      if (myBlockDecoratorNodeList.length === 0) {
+        const zeroWidthNodeList = $nodesOfType(ZeroWidthNode);
+        zeroWidthNodeList.forEach((node) => {
+          node.remove();
+        });
+      }
     });
   };
 

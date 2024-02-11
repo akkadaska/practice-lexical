@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $createTextNode, $nodesOfType, TextNode } from 'lexical';
-import { $isZeroWidthNode } from 'lexical-beautiful-mentions';
+import { $isZeroWidthNode } from './ZeroWidthWithIMEPlugin';
 import { useEffect } from 'react';
 import { MyBlockDecoratorNode } from '../node';
 

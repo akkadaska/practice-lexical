@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
-  $getNodeByKey,
   $nodesOfType,
   $setSelection,
   COMMAND_PRIORITY_LOW,
@@ -16,96 +15,85 @@ const SpaceSplitBlockPlugin: React.FC = () => {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    const removeTextNodeMutationListener = editor.registerMutationListener(
+    const unregisterNodeTransform = editor.registerNodeTransform(
       TextNode,
-      (mutatedNodes) => {
-        mutatedNodes.forEach((nodeMutation, nodeKey) => {
-          if (nodeMutation === 'updated' || nodeMutation === 'created') {
-            editor.update(() => {
-              const targetTextNode = $getNodeByKey<TextNode>(nodeKey);
+      (textNode) => {
+        const textContent = textNode.getTextContent();
 
-              if (!targetTextNode) {
-                return;
-              }
+        const isContainSpace =
+          textContent.includes(' ') || textContent.includes('　');
 
-              const targetTextNodeText = targetTextNode.getTextContent();
+        if (!isContainSpace) {
+          return;
+        }
 
-              const spaceTrimText = targetTextNodeText
-                .replace(/^[\s　]+/, '')
-                .replace(/[\s　]+$/, '');
+        const isEndWithSpace =
+          textContent.endsWith(' ') || textContent.endsWith('　');
 
-              const spaceSplitTexts = spaceTrimText.trim().split(/\s+/);
+        const spaceSplitTextList = textContent
+          .split(' ')
+          .map((text) => {
+            return text.split('　');
+          })
+          .flat()
+          .filter((text) => text !== '');
 
-              if (spaceSplitTexts.length > 1) {
-                for (const text of spaceSplitTexts) {
-                  const blockNode = $createMyBlockDecoratorNode(
-                    text,
-                    `text is ${text}`,
-                  );
-                  targetTextNode.insertBefore(blockNode);
-                }
-                targetTextNode.setTextContent('');
-                targetTextNode.selectEnd();
-                return;
-              }
+        const isSingleWordEndWithSpace =
+          spaceSplitTextList.length === 1 && isEndWithSpace;
 
-              const isEndWithSpace =
-                (targetTextNodeText.endsWith(' ') ||
-                  targetTextNodeText.endsWith('　')) &&
-                spaceSplitTexts[0] !== '';
+        const isMultipleWords = spaceSplitTextList.length > 1;
 
-              if (isEndWithSpace) {
-                const blockNodeText = spaceSplitTexts[0];
-                const blockNode = $createMyBlockDecoratorNode(
-                  blockNodeText,
-                  `text is ${blockNodeText}`,
-                );
-                targetTextNode.insertBefore(blockNode);
-                targetTextNode.setTextContent('');
-                targetTextNode.selectEnd();
-              }
+        if (!(isSingleWordEndWithSpace || isMultipleWords)) {
+          return;
+        }
 
-              return;
-            });
-          }
+        editor.update(() => {
+          const blockNodeList = spaceSplitTextList.map((text) =>
+            $createMyBlockDecoratorNode(text, `text is ${text}`),
+          );
+          blockNodeList.forEach((blockNode) => {
+            textNode.insertBefore(blockNode);
+          });
+
+          textNode.remove();
         });
-
-        const removeModifyCommand = editor.registerCommand(
-          MODIFY_SPACE_SPLIT,
-          () => {
-            editor.update(() => {
-              const textNodeList = $nodesOfType<TextNode>(TextNode);
-
-              textNodeList.forEach((textNode) => {
-                const textContent = textNode.getTextContent();
-                const spaceTrimText = textContent
-                  .replace(/^[\s　]+/, '')
-                  .replace(/[\s　]+$/, '');
-
-                if (spaceTrimText === '') {
-                  textNode.remove();
-                } else {
-                  const blockNode = $createMyBlockDecoratorNode(
-                    spaceTrimText,
-                    `text is ${spaceTrimText}`,
-                  );
-                  textNode.insertBefore(blockNode);
-                  textNode.setTextContent('');
-                  $setSelection(null);
-                }
-              });
-            });
-            return true;
-          },
-          COMMAND_PRIORITY_LOW,
-        );
-
-        return () => {
-          removeTextNodeMutationListener();
-          removeModifyCommand();
-        };
       },
     );
+
+    const removeModifyCommand = editor.registerCommand(
+      MODIFY_SPACE_SPLIT,
+      () => {
+        editor.update(() => {
+          const textNodeList = $nodesOfType<TextNode>(TextNode);
+
+          textNodeList.forEach((textNode) => {
+            const textContent = textNode.getTextContent();
+            const spaceTrimText = textContent
+              .replace(/^[\s　]+/, '')
+              .replace(/[\s　]+$/, '');
+
+            if (spaceTrimText === '') {
+              textNode.remove();
+            } else {
+              const blockNode = $createMyBlockDecoratorNode(
+                spaceTrimText,
+                `text is ${spaceTrimText}`,
+              );
+              textNode.insertBefore(blockNode);
+              textNode.setTextContent('');
+              $setSelection(null);
+            }
+          });
+        });
+        return true;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+
+    return () => {
+      unregisterNodeTransform();
+      removeModifyCommand();
+    };
   }, [editor]);
   return null;
 };

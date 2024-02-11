@@ -19,23 +19,23 @@ const EnsureExclusiveMyDecoratorBlockNodePlugin: React.FC = () => {
       TextNode,
       (mutatedNodes) => {
         mutatedNodes.forEach((nodeMutation, nodeKey) => {
+          if (nodeMutation !== 'created') {
+            return;
+          }
           editor.update(() => {
             const currentTextNode = $getNodeByKey<TextNode>(nodeKey);
             if (!currentTextNode) {
               return;
             }
-            const isNewTextInputted =
-              nodeMutation === 'updated' || nodeMutation === 'created';
-            if (isNewTextInputted) {
-              const myBlockNodeList =
-                $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
-              myBlockNodeList.forEach((myBlockNode) => {
-                const replacedTextNode = $createTextNode(
-                  myBlockNode.getTextContent(),
-                );
-                myBlockNode.replace(replacedTextNode);
-              });
-            }
+            const myBlockNodeList =
+              $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
+            myBlockNodeList.forEach((myBlockNode) => {
+              const replacedTextNode = $createTextNode(
+                myBlockNode.getTextContent(),
+              );
+              myBlockNode.replace(replacedTextNode);
+            });
+            currentTextNode.selectEnd();
           });
         });
       },

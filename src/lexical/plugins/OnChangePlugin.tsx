@@ -1,5 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useRef } from 'react';
+import { ZERO_WIDTH_CHARACTER } from './ZeroWidthWithIMEPlugin';
 import { $isMyBlockDecoratorNode, $isMyBlockNode } from '../node';
 import { $getRoot, $isParagraphNode } from 'lexical';
 
@@ -69,7 +70,10 @@ const OnChangePlugin: React.FC<{
             return;
           }
 
-          const text = firstChildOfFirstParagraph?.getTextContent() ?? '';
+          const text =
+            firstChildOfFirstParagraph
+              ?.getTextContent()
+              .replace(new RegExp(ZERO_WIDTH_CHARACTER, 'g'), '') ?? '';
           if (
             !(
               lastContentRef.current?.type === 'text' &&

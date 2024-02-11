@@ -8,7 +8,6 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
-import { ZeroWidthPlugin, ZeroWidthNode } from 'lexical-beautiful-mentions';
 import { MyBlockDecoratorNode, MyBlockNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
 import React from 'react';
@@ -25,6 +24,11 @@ import SetSingleBlockDecoratorNodePlugin, {
   SET_SINGLE_DECORATOR_BLOCK_COMMAND,
 } from './plugins/SetSingleBlockDecoratorNodePlugin';
 import EnsureExclusiveMyDecoratorBlockNodePlugin from './plugins/EnsureExclusiveMyDecoratorBlockNode';
+import {
+  ZERO_WIDTH_CHARACTER,
+  ZeroWidthNode,
+  ZeroWidthWithIMEPlugin,
+} from './plugins/ZeroWidthWithIMEPlugin';
 
 const onError = (error: unknown) => {
   console.error(error);
@@ -66,7 +70,7 @@ const MyEditor: React.FC<{
         <ClearEditorPlugin />
         <SetSingleBlockNodePlugin />
         <SetSingleBlockDecoratorNodePlugin />
-        <ZeroWidthPlugin />
+        <ZeroWidthWithIMEPlugin textContent={ZERO_WIDTH_CHARACTER} />
         <EnsureExclusiveMyBlockNodePlugin />
         <EnsureExclusiveMyDecoratorBlockNodePlugin />
         <OnChangePlugin onChange={onChange} />
