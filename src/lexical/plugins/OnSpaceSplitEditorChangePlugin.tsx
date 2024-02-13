@@ -1,18 +1,23 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useRef } from 'react';
-import {
-  $isZeroWidthNode,
-  ZERO_WIDTH_CHARACTER,
-} from './ZeroWidthWithIMEPlugin';
+import { $isZeroWidthNode } from './ZeroWidthWithIMEPlugin';
 import { $isMyBlockDecoratorNode } from '../node';
-import { $getRoot, $isParagraphNode, $isTextNode } from 'lexical';
+import {
+  $getRoot,
+  $isParagraphNode,
+  $isTextNode,
+  $nodesOfType,
+  TextNode,
+} from 'lexical';
 
 const OnSpaceSplitEditorChangePlugin: React.FC<{
-  onChange: (arg: unknown) => unknown;
+  onChange: (arg: { text: string; isModified: boolean } | null) => unknown;
 }> = ({ onChange }) => {
   const [editor] = useLexicalComposerContext();
 
-  const lastContentRef = useRef<string | null>(null);
+  const lastContentRef = useRef<{ text: string; isModified: boolean } | null>(
+    null,
+  );
 
   useEffect(() => {
     const unregisterOnChange = editor.registerUpdateListener(
@@ -21,24 +26,18 @@ const OnSpaceSplitEditorChangePlugin: React.FC<{
           const root = $getRoot();
           const firstParagraph = root.getChildAtIndex(0);
           if (root.isEmpty()) {
-            if (lastContentRef.current !== '') {
-              lastContentRef.current = '';
-              onChange('');
+            if (lastContentRef.current?.text !== '') {
+              lastContentRef.current = {
+                text: '',
+                isModified: true,
+              };
+              onChange(lastContentRef.current);
             }
             return;
           }
           if (!$isParagraphNode(firstParagraph)) {
             return;
           }
-          console.log(
-            firstParagraph
-              .getChildren()
-              .map((node) => [
-                node.getType(),
-                node.getTextContent(),
-                node.getTextContent().includes(ZERO_WIDTH_CHARACTER),
-              ]),
-          );
           const text = firstParagraph
             .getChildren()
             .filter(
@@ -48,12 +47,20 @@ const OnSpaceSplitEditorChangePlugin: React.FC<{
             .map((node) => node.getTextContent())
             .join(' ');
 
-          if (lastContentRef.current === text) {
+          const isModified = $nodesOfType(TextNode).length === 0;
+
+          if (
+            lastContentRef.current?.text === text &&
+            lastContentRef.current.isModified === isModified
+          ) {
             return;
           }
 
-          lastContentRef.current = text;
-          onChange(text);
+          lastContentRef.current = {
+            text,
+            isModified,
+          };
+          onChange(lastContentRef.current);
         });
       },
     );

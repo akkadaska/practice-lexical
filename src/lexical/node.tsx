@@ -87,6 +87,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
   __blockInfo: string;
   __uid: string;
   __disabled?: boolean;
+  __modify?: () => unknown;
 
   static getType(): string {
     return 'dcrtr';
@@ -98,6 +99,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
       node.__blockInfo,
       node.__uid,
       node.__disabled,
+      node.__modify,
       node.__key,
     );
   }
@@ -107,6 +109,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
     blockInfo: string,
     uid: string,
     disabled?: boolean,
+    modify?: () => unknown,
     key?: NodeKey,
   ) {
     super(key);
@@ -114,6 +117,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
     this.__blockInfo = blockInfo;
     this.__uid = uid;
     this.__disabled = disabled;
+    this.__modify = modify;
   }
 
   getTextContent(): string {
@@ -128,6 +132,10 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
     return this.__uid;
   }
 
+  getModify(): (() => unknown) | undefined {
+    return this.__modify;
+  }
+
   createDOM(): HTMLElement {
     return document.createElement('span');
   }
@@ -138,7 +146,11 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
 
   decorate(): ReactNode {
     return (
-      <ButtonStyleBlock uid={this.__uid} disabled={this.__disabled}>
+      <ButtonStyleBlock
+        uid={this.__uid}
+        disabled={this.__disabled}
+        modify={this.__modify}
+      >
         {this.__text}
       </ButtonStyleBlock>
     );
@@ -171,9 +183,10 @@ const $createMyBlockDecoratorNode = (
   text: string,
   blockInfo: string,
   disabled?: boolean,
+  modify?: () => unknown,
 ) => {
   const uid = uuid();
-  const node = new MyBlockDecoratorNode(text, blockInfo, uid, disabled);
+  const node = new MyBlockDecoratorNode(text, blockInfo, uid, disabled, modify);
   return node;
 };
 

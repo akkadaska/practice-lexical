@@ -1,5 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
+  $getRoot,
   $nodesOfType,
   $setSelection,
   COMMAND_PRIORITY_LOW,
@@ -9,9 +10,13 @@ import {
 import { useEffect } from 'react';
 import { $createMyBlockDecoratorNode } from '../node';
 
-const MODIFY_SPACE_SPLIT = createCommand<void>('MODIFY_SPACE_SPLIT');
+const MODIFY_SPACE_SPLIT = createCommand<boolean | undefined>(
+  'MODIFY_SPACE_SPLIT',
+);
 
-const SpaceSplitBlockPlugin: React.FC = () => {
+const SpaceSplitBlockPlugin: React.FC<{
+  modify: (focus?: boolean) => unknown;
+}> = ({ modify }) => {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
@@ -49,7 +54,9 @@ const SpaceSplitBlockPlugin: React.FC = () => {
 
         editor.update(() => {
           const blockNodeList = spaceSplitTextList.map((text) =>
-            $createMyBlockDecoratorNode(text, `text is ${text}`),
+            $createMyBlockDecoratorNode(text, `text is ${text}`, false, () =>
+              modify(false),
+            ),
           );
           blockNodeList.forEach((blockNode) => {
             textNode.insertBefore(blockNode);
@@ -62,7 +69,7 @@ const SpaceSplitBlockPlugin: React.FC = () => {
 
     const removeModifyCommand = editor.registerCommand(
       MODIFY_SPACE_SPLIT,
-      () => {
+      (focus) => {
         editor.update(() => {
           const textNodeList = $nodesOfType<TextNode>(TextNode);
 
@@ -78,12 +85,17 @@ const SpaceSplitBlockPlugin: React.FC = () => {
               const blockNode = $createMyBlockDecoratorNode(
                 spaceTrimText,
                 `text is ${spaceTrimText}`,
+                false,
+                () => modify(false),
               );
               textNode.insertBefore(blockNode);
               textNode.setTextContent('');
               $setSelection(null);
             }
           });
+          if (focus) {
+            $getRoot().selectEnd();
+          }
         });
         return true;
       },
@@ -94,7 +106,7 @@ const SpaceSplitBlockPlugin: React.FC = () => {
       unregisterNodeTransform();
       removeModifyCommand();
     };
-  }, [editor]);
+  }, [editor, modify]);
   return null;
 };
 

@@ -1,12 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $createTextNode,
-  $getNodeByKey,
-  $nodesOfType,
-  COMMAND_PRIORITY_LOW,
-  KEY_DOWN_COMMAND,
-  TextNode,
-} from 'lexical';
+import { $createTextNode, $nodesOfType, TextNode } from 'lexical';
 import { useEffect } from 'react';
 import { MyBlockDecoratorNode } from '../node';
 import { ZERO_WIDTH_CHARACTER } from './ZeroWidthNode';
@@ -23,19 +16,15 @@ const DisableInputWhenBlockNodeExist: React.FC<{
     const removeUpdateListener = editor.registerMutationListener(
       TextNode,
       (mutatedNodes) => {
-        mutatedNodes.forEach((nodeMutation, nodeKey) => {
-          if (nodeMutation !== 'created') {
+        mutatedNodes.forEach((nodeMutation, _nodeKey) => {
+          if (nodeMutation === 'destroyed') {
             return;
           }
-          editor.update(() => {
-            const currentTextNode = $getNodeByKey<TextNode>(nodeKey);
-            if (!currentTextNode) {
-              return;
-            }
+          editor.getEditorState().read(() => {
             const myBlockNodeList =
               $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
             if (myBlockNodeList.length > 0) {
-              // onInvalidInput();
+              onInvalidInput();
             }
           });
         });
@@ -58,31 +47,14 @@ const DisableInputWhenBlockNodeExist: React.FC<{
           node.insertAfter(newTextNode);
           newTextNode.selectEnd();
           node.remove();
-        }
-      },
-    );
-
-    const unregisterCommand = editor.registerCommand(
-      KEY_DOWN_COMMAND,
-      (event) => {
-        if (event.key === 'Enter') {
-          console.log('Enter');
-          return false;
-        }
-        const myBlockNodeList =
-          $nodesOfType<MyBlockDecoratorNode>(MyBlockDecoratorNode);
-        if (myBlockNodeList.length > 0) {
           onInvalidInput();
         }
-        return false;
       },
-      COMMAND_PRIORITY_LOW,
     );
 
     return () => {
       removeUpdateListener();
       removeTextNodeTransform();
-      unregisterCommand();
     };
   }, [editor, onInvalidInput]);
 

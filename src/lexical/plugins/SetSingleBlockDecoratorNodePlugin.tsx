@@ -13,6 +13,7 @@ const SET_SINGLE_DECORATOR_BLOCK_COMMAND = createCommand<{
   text: string;
   blockInfo: string;
   disabled?: boolean;
+  focus?: boolean;
 }>('SET_SINGLE_DECORATOR_BLOCK_COMMAND');
 
 const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
@@ -21,7 +22,7 @@ const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
   useEffect(() => {
     const unregisterCommand = editor.registerCommand(
       SET_SINGLE_DECORATOR_BLOCK_COMMAND,
-      ({ text, blockInfo, disabled }) => {
+      ({ text, blockInfo, disabled, focus }) => {
         editor.update(() => {
           $getRoot().clear();
           $setSelection(null);
@@ -36,6 +37,9 @@ const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
 
           paragraphNode.append(blockNode);
           $getRoot().append(paragraphNode);
+          if (focus) {
+            paragraphNode.selectEnd();
+          }
         });
 
         return true;

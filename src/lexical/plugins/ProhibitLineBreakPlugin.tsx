@@ -5,7 +5,9 @@ import React, { useEffect } from 'react';
 /**
  * Lexicalエディタ内で改行を禁止し、input[type="text"]のようにふるまうようにするプラグイン
  */
-const ProhibitLineBreakPlugin: React.FC = () => {
+const ProhibitLineBreakPlugin: React.FC<{
+  onInputComplete?: () => unknown;
+}> = ({ onInputComplete }) => {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
@@ -13,13 +15,14 @@ const ProhibitLineBreakPlugin: React.FC = () => {
       LineBreakNode,
       (lineBreakNode) => {
         lineBreakNode.remove();
+        onInputComplete && onInputComplete();
       },
     );
 
     return () => {
       removeUpdateListener();
     };
-  }, [editor]);
+  }, [editor, onInputComplete]);
 
   return null;
 };

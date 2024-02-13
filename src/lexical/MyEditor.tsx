@@ -8,9 +8,9 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
-import { MyBlockDecoratorNode, MyBlockNode } from './node';
+import { MyBlockDecoratorNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
-import React from 'react';
+import React, { FocusEventHandler } from 'react';
 import ClearEditorPlugin, {
   CLEAR_EDITOR_COMMAND,
 } from './plugins/ClearEditorPlugin';
@@ -26,12 +26,33 @@ import {
 } from './plugins/ZeroWidthWithIMEPlugin';
 import DisableInputWhenBlockNodeExist from './plugins/DisableInputWhenBlockNodeExist';
 
+const validLeadingTextList = [
+  '東京駅',
+  '東京',
+  '東',
+  'とうきょうえき',
+  'とうきょうえ',
+  'とうきょう',
+  'とうき',
+  'とう',
+  'と',
+];
+
+export const isValidQuery = (query: string) => {
+  return validLeadingTextList.includes(query);
+};
+
 const onError = (error: unknown) => {
   console.error(error);
 };
 
-const MyContentEditable: React.FC = () => (
-  <ContentEditable className="z-10 relative p-2 border border-gray-400 outline-none focus:border-b-2 focus:border-blue-600 rounded" />
+const MyContentEditable: React.FC<{ onBlur: FocusEventHandler }> = ({
+  onBlur,
+}) => (
+  <ContentEditable
+    className="z-10 relative p-2 border border-gray-400 outline-none focus:border-b-2 focus:border-blue-600 rounded"
+    onBlur={onBlur}
+  />
 );
 
 const MyPlaceHolder: React.FC<{
@@ -44,26 +65,34 @@ const MyPlaceHolder: React.FC<{
 
 const MyEditor: React.FC<{
   editorRef: React.RefObject<LexicalEditor>;
-  onChange: (arg: unknown) => unknown;
-  onInvalidInput: () => void;
-}> = ({ editorRef, onChange, onInvalidInput }) => {
+  onChange: (
+    arg:
+      | { type: 'text'; text: string }
+      | { type: 'block'; blockInfo: string }
+      | { type: 'decorator-block'; blockInfo: string }
+      | null,
+  ) => unknown;
+  onInvalidInput: (type: string) => void;
+  onInputComplete: () => void;
+  onBlur: () => void;
+}> = ({ editorRef, onChange, onInvalidInput, onInputComplete, onBlur }) => {
   const initialConfig: InitialConfigType = {
     editable: true,
     namespace: 'MyEditor',
     onError,
-    nodes: [MyBlockNode, MyBlockDecoratorNode, ZeroWidthNode],
+    nodes: [MyBlockDecoratorNode, ZeroWidthNode],
   };
 
   return (
     <div className="relative">
       <LexicalComposer initialConfig={initialConfig}>
         <PlainTextPlugin
-          contentEditable={<MyContentEditable />}
+          contentEditable={<MyContentEditable onBlur={onBlur} />}
           placeholder={<MyPlaceHolder>Enter some text...</MyPlaceHolder>}
           ErrorBoundary={LexicalErrorBoundary}
         />
         <EditorRefPlugin editorRef={editorRef} />
-        <ProhibitLineBreakPlugin />
+        <ProhibitLineBreakPlugin onInputComplete={onInputComplete} />
         <ClearEditorPlugin />
         <SetSingleBlockDecoratorNodePlugin />
         <ZeroWidthWithIMEPlugin textContent={ZERO_WIDTH_CHARACTER} />
@@ -71,7 +100,9 @@ const MyEditor: React.FC<{
           // <EnsureExclusiveMyBlockNodePlugin />
           // <EnsureExclusiveMyDecoratorBlockNodePlugin />
         }
-        <DisableInputWhenBlockNodeExist onInvalidInput={onInvalidInput} />
+        <DisableInputWhenBlockNodeExist
+          onInvalidInput={() => onInvalidInput('multi-query')}
+        />
         <OnChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>
@@ -88,14 +119,20 @@ const useLexicalEditorControl = () => {
         { focusAfterClear },
       );
     },
-    SetSingleBlockDecoratorNode: (
+    setSingleBlockDecoratorNode: (
       text: string,
       blockInfo: string,
       disabled?: boolean,
+      focus?: boolean,
     ) => {
       editorRef.current?.dispatchCommand<
         typeof SET_SINGLE_DECORATOR_BLOCK_COMMAND
-      >(SET_SINGLE_DECORATOR_BLOCK_COMMAND, { text, blockInfo, disabled });
+      >(SET_SINGLE_DECORATOR_BLOCK_COMMAND, {
+        text,
+        blockInfo,
+        disabled,
+        focus,
+      });
     },
   } as const;
   return [editorRef, controller] as const;

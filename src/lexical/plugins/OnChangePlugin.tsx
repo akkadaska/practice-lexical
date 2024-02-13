@@ -1,11 +1,17 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useRef } from 'react';
 import { ZERO_WIDTH_CHARACTER } from './ZeroWidthWithIMEPlugin';
-import { $isMyBlockDecoratorNode, $isMyBlockNode } from '../node';
-import { $getRoot, $isParagraphNode } from 'lexical';
+import { $isMyBlockDecoratorNode, MyBlockDecoratorNode } from '../node';
+import { $getRoot, $isParagraphNode, $isTextNode, TextNode } from 'lexical';
 
 const OnChangePlugin: React.FC<{
-  onChange: (arg: unknown) => unknown;
+  onChange: (
+    arg:
+      | { type: 'text'; text: string }
+      | { type: 'block'; blockInfo: string }
+      | { type: 'decorator-block'; blockInfo: string }
+      | null,
+  ) => unknown;
 }> = ({ onChange }) => {
   const [editor] = useLexicalComposerContext();
 
@@ -34,58 +40,63 @@ const OnChangePlugin: React.FC<{
             }
             return;
           }
-          const firstChildOfFirstParagraph = firstParagraph.getChildAtIndex(0);
+          const decoratorBlock = firstParagraph.getChildren().find((child) => {
+            return $isMyBlockDecoratorNode(child);
+          }) as MyBlockDecoratorNode | undefined;
 
-          if ($isMyBlockNode(firstChildOfFirstParagraph)) {
-            if (
-              !(
-                lastContentRef.current?.type === 'block' &&
-                lastContentRef.current.blockInfo ===
-                  firstChildOfFirstParagraph.getBlockInfo()
-              )
-            ) {
-              lastContentRef.current = {
-                type: 'block',
-                blockInfo: firstChildOfFirstParagraph.getBlockInfo(),
-              };
-              onChange(lastContentRef.current);
-            }
-            return;
-          }
-
-          if ($isMyBlockDecoratorNode(firstChildOfFirstParagraph)) {
+          if (decoratorBlock) {
             if (
               !(
                 lastContentRef.current?.type === 'decorator-block' &&
                 lastContentRef.current.blockInfo ===
-                  firstChildOfFirstParagraph.getBlockInfo()
+                  decoratorBlock.getBlockInfo()
               )
             ) {
               lastContentRef.current = {
                 type: 'decorator-block',
-                blockInfo: firstChildOfFirstParagraph.getBlockInfo(),
+                blockInfo: decoratorBlock.getBlockInfo(),
               };
               onChange(lastContentRef.current);
             }
             return;
           }
 
-          const text =
-            firstChildOfFirstParagraph
-              ?.getTextContent()
-              .replace(new RegExp(ZERO_WIDTH_CHARACTER, 'g'), '') ?? '';
+          const textNode = firstParagraph.getChildren().find((child) => {
+            return $isTextNode(child);
+          }) as TextNode | undefined;
+
+          if (textNode) {
+            const textContent = textNode
+              .getTextContent()
+              .replace(ZERO_WIDTH_CHARACTER, '');
+            if (
+              !(
+                lastContentRef.current?.type === 'text' &&
+                lastContentRef.current.text === textContent
+              )
+            ) {
+              lastContentRef.current = {
+                type: 'text',
+                text: textContent,
+              };
+              onChange(lastContentRef.current);
+            }
+            return;
+          }
+
           if (
             !(
               lastContentRef.current?.type === 'text' &&
-              lastContentRef.current.text === text
+              lastContentRef.current.text === ''
             )
           ) {
             lastContentRef.current = {
               type: 'text',
-              text: text,
+              text: '',
             };
             onChange(lastContentRef.current);
           }
+          return;
         });
       },
     );

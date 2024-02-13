@@ -15,7 +15,7 @@ import {
 } from './plugins/ZeroWidthWithIMEPlugin';
 import { MyBlockDecoratorNode, MyBlockNode } from './node';
 import ProhibitLineBreakPlugin from './plugins/ProhibitLineBreakPlugin';
-import React from 'react';
+import React, { FocusEventHandler } from 'react';
 import ClearEditorPlugin, {
   CLEAR_EDITOR_COMMAND,
 } from './plugins/ClearEditorPlugin';
@@ -29,8 +29,13 @@ const onError = (error: unknown) => {
   console.error(error);
 };
 
-const MyContentEditable: React.FC = () => (
-  <ContentEditable className="z-10 relative p-2 border border-gray-400 outline-none focus:border-b-2 focus:border-blue-600 rounded" />
+const MyContentEditable: React.FC<{ onBlur: FocusEventHandler }> = ({
+  onBlur,
+}) => (
+  <ContentEditable
+    className="z-10 relative p-2 border border-gray-400 outline-none focus:border-b-2 focus:border-blue-600 rounded"
+    onBlur={onBlur}
+  />
 );
 
 const MyPlaceHolder: React.FC<{
@@ -43,8 +48,17 @@ const MyPlaceHolder: React.FC<{
 
 const MySpaceSplitEditor: React.FC<{
   editorRef: React.RefObject<LexicalEditor>;
-  onChange: (arg: unknown) => unknown;
-}> = ({ editorRef, onChange }) => {
+  onChange: (arg: { text: string; isModified: boolean } | null) => unknown;
+  onBlur: () => unknown;
+  onInputComplete: () => unknown;
+  modifyForSpaceSplitBlockPlugin: (focus?: boolean) => unknown;
+}> = ({
+  editorRef,
+  onChange,
+  onBlur,
+  onInputComplete,
+  modifyForSpaceSplitBlockPlugin,
+}) => {
   const initialConfig: InitialConfigType = {
     editable: true,
     namespace: 'MySpaceSplitEditor',
@@ -56,17 +70,17 @@ const MySpaceSplitEditor: React.FC<{
     <div className="relative">
       <LexicalComposer initialConfig={initialConfig}>
         <PlainTextPlugin
-          contentEditable={<MyContentEditable />}
+          contentEditable={<MyContentEditable onBlur={onBlur} />}
           placeholder={<MyPlaceHolder>Enter some text...</MyPlaceHolder>}
           ErrorBoundary={LexicalErrorBoundary}
         />
         <EditorRefPlugin editorRef={editorRef} />
-        <ProhibitLineBreakPlugin />
+        <ProhibitLineBreakPlugin onInputComplete={onInputComplete} />
         <ClearEditorPlugin />
 
         {/* textContent should be set to avoid IME bugs */}
         <ZeroWidthWithIMEPlugin textContent={ZERO_WIDTH_CHARACTER} />
-        <SpaceSplitBlockPlugin />
+        <SpaceSplitBlockPlugin modify={modifyForSpaceSplitBlockPlugin} />
         <OnSpaceSplitEditorChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>
@@ -83,8 +97,11 @@ const useLexicalSpaceSplitEditorControl = () => {
         { focusAfterClear },
       );
     },
-    modify: () => {
-      editorRef.current?.dispatchCommand(MODIFY_SPACE_SPLIT, void 0);
+    modify: (focus?: boolean) => {
+      editorRef.current?.dispatchCommand<typeof MODIFY_SPACE_SPLIT>(
+        MODIFY_SPACE_SPLIT,
+        focus,
+      );
     },
   } as const;
   return [editorRef, controller] as const;
