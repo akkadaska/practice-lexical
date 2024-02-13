@@ -19,6 +19,7 @@ interface SerializedMyDecoratorBlockNode extends SerializedLexicalNode {
   text: string;
   blockInfo: string;
   uid: string;
+  disabled?: boolean;
 }
 
 class MyBlockNode extends TextNode {
@@ -85,6 +86,7 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
   __text: string;
   __blockInfo: string;
   __uid: string;
+  __disabled?: boolean;
 
   static getType(): string {
     return 'dcrtr';
@@ -95,15 +97,23 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
       node.__text,
       node.__blockInfo,
       node.__uid,
+      node.__disabled,
       node.__key,
     );
   }
 
-  constructor(text: string, blockInfo: string, uid: string, key?: NodeKey) {
+  constructor(
+    text: string,
+    blockInfo: string,
+    uid: string,
+    disabled?: boolean,
+    key?: NodeKey,
+  ) {
     super(key);
     this.__text = text;
     this.__blockInfo = blockInfo;
     this.__uid = uid;
+    this.__disabled = disabled;
   }
 
   getTextContent(): string {
@@ -127,7 +137,11 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
   }
 
   decorate(): ReactNode {
-    return <ButtonStyleBlock uid={this.__uid}>{this.__text}</ButtonStyleBlock>;
+    return (
+      <ButtonStyleBlock uid={this.__uid} disabled={this.__disabled}>
+        {this.__text}
+      </ButtonStyleBlock>
+    );
   }
 
   exportJSON(): SerializedMyDecoratorBlockNode {
@@ -137,19 +151,29 @@ class MyBlockDecoratorNode extends DecoratorNode<ReactNode> {
       text: this.__text,
       blockInfo: this.__blockInfo,
       uid: this.__uid,
+      disabled: this.__disabled,
     };
   }
 
   static importJSON(
     json: SerializedMyDecoratorBlockNode,
   ): MyBlockDecoratorNode {
-    return new MyBlockDecoratorNode(json.text, json.blockInfo, json.uid);
+    return new MyBlockDecoratorNode(
+      json.text,
+      json.blockInfo,
+      json.uid,
+      json.disabled,
+    );
   }
 }
 
-const $createMyBlockDecoratorNode = (text: string, blockInfo: string) => {
+const $createMyBlockDecoratorNode = (
+  text: string,
+  blockInfo: string,
+  disabled?: boolean,
+) => {
   const uid = uuid();
-  const node = new MyBlockDecoratorNode(text, blockInfo, uid);
+  const node = new MyBlockDecoratorNode(text, blockInfo, uid, disabled);
   return node;
 };
 

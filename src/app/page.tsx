@@ -3,7 +3,7 @@ import MyEditor, { useLexicalEditorControl } from '@/lexical/MyEditor';
 import MySpaceSplitEditor, {
   useLexicalSpaceSplitEditorControl,
 } from '@/lexical/MySpaceSplitEditor';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const Page: React.FC = () => {
   const [editorRef, controller] = useLexicalEditorControl();
@@ -12,9 +12,32 @@ const Page: React.FC = () => {
 
   const [state, setState] = useState<unknown>(null);
   const [spaceSplitState, setSpaceSplitState] = useState<unknown>(null);
+
+  const [isShowErrorMessage, setIsShowErrorMessage] = useState(false);
+
+  const errorMessageTimer = useRef<number | null>(null);
+
+  const showErrorMessage = () => {
+    setIsShowErrorMessage(true);
+    if (errorMessageTimer.current) {
+      clearTimeout(errorMessageTimer.current);
+    }
+    errorMessageTimer.current = window.setTimeout(() => {
+      setIsShowErrorMessage(false);
+    }, 3000);
+  };
   return (
     <div>
-      <MyEditor editorRef={editorRef} onChange={setState} />
+      <p
+        className={`transition-opacity duration-500 ease-in-out ${isShowErrorMessage ? 'opacity-100' : 'opacity-0'} text-red-600 font-bold text-sm`}
+      >
+        ここのクエリは一つだけしか入力できません。
+      </p>
+      <MyEditor
+        editorRef={editorRef}
+        onChange={setState}
+        onInvalidInput={showErrorMessage}
+      />
       <div className="mt-4">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
@@ -35,21 +58,25 @@ const Page: React.FC = () => {
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={() => {
-            controller.setSingleBlockNode('Hello, Block!', 'custom info');
+            controller.SetSingleBlockDecoratorNode(
+              '有効なクエリ',
+              'custom decorator info',
+            );
           }}
         >
-          Set Block Node
+          Set Valid Decorator Block Node
         </button>
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={() => {
             controller.SetSingleBlockDecoratorNode(
-              'Hello, Decorator!',
+              '無効なクエリ',
               'custom decorator info',
+              true,
             );
           }}
         >
-          Set Decorator Block Node
+          Set Invalid Decorator Block Node
         </button>
       </div>
       <div className="my-2">

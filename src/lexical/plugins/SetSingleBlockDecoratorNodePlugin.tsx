@@ -12,6 +12,7 @@ import { $createMyBlockDecoratorNode } from '../node';
 const SET_SINGLE_DECORATOR_BLOCK_COMMAND = createCommand<{
   text: string;
   blockInfo: string;
+  disabled?: boolean;
 }>('SET_SINGLE_DECORATOR_BLOCK_COMMAND');
 
 const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
@@ -20,14 +21,18 @@ const SetSingleBlockDecoratorNodePlugin: React.FC = () => {
   useEffect(() => {
     const unregisterCommand = editor.registerCommand(
       SET_SINGLE_DECORATOR_BLOCK_COMMAND,
-      ({ text, blockInfo }) => {
+      ({ text, blockInfo, disabled }) => {
         editor.update(() => {
           $getRoot().clear();
           $setSelection(null);
 
           const paragraphNode = $createParagraphNode();
 
-          const blockNode = $createMyBlockDecoratorNode(text, blockInfo);
+          const blockNode = $createMyBlockDecoratorNode(
+            text,
+            blockInfo,
+            disabled,
+          );
 
           paragraphNode.append(blockNode);
           $getRoot().append(paragraphNode);

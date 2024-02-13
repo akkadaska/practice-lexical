@@ -15,20 +15,16 @@ import ClearEditorPlugin, {
   CLEAR_EDITOR_COMMAND,
 } from './plugins/ClearEditorPlugin';
 import { LexicalEditor } from 'lexical';
-import SetSingleBlockNodePlugin, {
-  SET_SINGLE_BLOCK_COMMAND,
-} from './plugins/SetSingleBlockNodePlugin';
-import EnsureExclusiveMyBlockNodePlugin from './plugins/EnsureExclusiveMyBlockNode';
 import OnChangePlugin from './plugins/OnChangePlugin';
 import SetSingleBlockDecoratorNodePlugin, {
   SET_SINGLE_DECORATOR_BLOCK_COMMAND,
 } from './plugins/SetSingleBlockDecoratorNodePlugin';
-import EnsureExclusiveMyDecoratorBlockNodePlugin from './plugins/EnsureExclusiveMyDecoratorBlockNode';
 import {
   ZERO_WIDTH_CHARACTER,
   ZeroWidthNode,
   ZeroWidthWithIMEPlugin,
 } from './plugins/ZeroWidthWithIMEPlugin';
+import DisableInputWhenBlockNodeExist from './plugins/DisableInputWhenBlockNodeExist';
 
 const onError = (error: unknown) => {
   console.error(error);
@@ -49,7 +45,8 @@ const MyPlaceHolder: React.FC<{
 const MyEditor: React.FC<{
   editorRef: React.RefObject<LexicalEditor>;
   onChange: (arg: unknown) => unknown;
-}> = ({ editorRef, onChange }) => {
+  onInvalidInput: () => void;
+}> = ({ editorRef, onChange, onInvalidInput }) => {
   const initialConfig: InitialConfigType = {
     editable: true,
     namespace: 'MyEditor',
@@ -68,11 +65,13 @@ const MyEditor: React.FC<{
         <EditorRefPlugin editorRef={editorRef} />
         <ProhibitLineBreakPlugin />
         <ClearEditorPlugin />
-        <SetSingleBlockNodePlugin />
         <SetSingleBlockDecoratorNodePlugin />
         <ZeroWidthWithIMEPlugin textContent={ZERO_WIDTH_CHARACTER} />
-        <EnsureExclusiveMyBlockNodePlugin />
-        <EnsureExclusiveMyDecoratorBlockNodePlugin />
+        {
+          // <EnsureExclusiveMyBlockNodePlugin />
+          // <EnsureExclusiveMyDecoratorBlockNodePlugin />
+        }
+        <DisableInputWhenBlockNodeExist onInvalidInput={onInvalidInput} />
         <OnChangePlugin onChange={onChange} />
       </LexicalComposer>
     </div>
@@ -89,16 +88,14 @@ const useLexicalEditorControl = () => {
         { focusAfterClear },
       );
     },
-    setSingleBlockNode: (text: string, blockInfo: string) => {
-      editorRef.current?.dispatchCommand<typeof SET_SINGLE_BLOCK_COMMAND>(
-        SET_SINGLE_BLOCK_COMMAND,
-        { text, blockInfo },
-      );
-    },
-    SetSingleBlockDecoratorNode: (text: string, blockInfo: string) => {
+    SetSingleBlockDecoratorNode: (
+      text: string,
+      blockInfo: string,
+      disabled?: boolean,
+    ) => {
       editorRef.current?.dispatchCommand<
         typeof SET_SINGLE_DECORATOR_BLOCK_COMMAND
-      >(SET_SINGLE_DECORATOR_BLOCK_COMMAND, { text, blockInfo });
+      >(SET_SINGLE_DECORATOR_BLOCK_COMMAND, { text, blockInfo, disabled });
     },
   } as const;
   return [editorRef, controller] as const;

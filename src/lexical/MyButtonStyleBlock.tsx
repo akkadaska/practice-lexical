@@ -6,7 +6,8 @@ import { ZeroWidthNode } from './plugins/ZeroWidthWithIMEPlugin';
 const ButtonStyleBlock: React.FC<{
   children: React.ReactNode;
   uid: string;
-}> = ({ children, uid }) => {
+  disabled?: boolean;
+}> = ({ children, uid, disabled }) => {
   const [editor] = useLexicalComposerContext();
 
   const onClick = () => {
@@ -25,9 +26,26 @@ const ButtonStyleBlock: React.FC<{
     });
   };
 
+  if (disabled) {
+    return (
+      <div className="inline-block px-1 text-xs">
+        <div className="px-1 inline-block text-red-800 bg-red-100 rounded border border-red-800 border-dashed">
+          {children}(クエリが見つかりません)
+          <button
+            type="button"
+            className="inline-block p-1 text-red-800"
+            onClick={onClick}
+          >
+            X
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="inline-block px-1 text-xs">
-      <div className="px-1 inline-block text-white bg-red-900 rounded">
+      <div className="px-1 inline-block text-white bg-red-700 rounded border border-red-900">
         {children}
         <button
           type="button"
